@@ -1,0 +1,98 @@
+body {
+	margin: 0px;
+	background-color: #1e2a2e;
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+}
+
+#top-bar {
+	background-color: #0e1a1e;
+	display: flex;
+	justify-content: center;
+
+	color: white;
+	font-family: sans-serif;
+	font-size: 32px;
+
+	padding: 5px;
+}
+
+#control-bar {
+	display: flex;
+	justify-content: center;
+	padding-bottom: 60px;
+}
+
+.control-button {
+	/*width: 60px;
+	height: 60px;*/
+	border-radius: 50%;
+	background-color: white;
+	cursor: pointer;
+	padding: 16px 18px;
+}
+
+.play-pause-button {
+	border: 0;
+	box-sizing: border-box;
+	width: 0;
+	height: 34px;
+
+	border-color: transparent transparent transparent #202020;
+	transition: 100ms all ease;
+	
+	border-style: solid;
+	border-width: 17px 0 17px 30px;
+}
+
+.play-pause-button[paused="true"] {
+	height: 30px;
+	margin: 2px 0px;
+	border-width: 0px 0 0px 30px;
+}
+
+#game-container {
+	display: flex;
+	flex-grow: 1;
+	align-items: center;
+	justify-content: center;
+}
+
+#game-pannel {
+	display: flex;
+	flex-direction: row;
+}
+
+#game-note {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	height: 30vh;
+	width: 10vw;
+	margin: 0px 10px;
+}
+
+#game-pitch {
+	height: 20px;
+	border-radius: 10px;
+	transition: 100ms background-color ease;
+}
+
+#game-pitch[state='inactive'] {
+	background-color: #485558;
+}
+
+#game-pitch[state='active'] {
+	background-color: #ffff2f;
+}
+
+#game-pannel.wrong #game-pitch[state='active'] {
+	background-color: #ff2f2f;
+}
+
+h1 {
+	color: white;
+	font-family: sans-serif;
+	font-size: 48px;
+}

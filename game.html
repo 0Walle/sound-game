@@ -1,0 +1,211 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Sound Game</title>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<script src="js/util.js"></script>
+</head>
+<body>
+	<div id="top-bar">
+		<span id="current-level-display">1/10</span>
+	</div>
+	<div id="game-container">
+		<div id="game-pannel">
+		</div>
+	</div>
+	<div id="control-bar">
+		<div class="control-button" id="control-pause" onclick="playStop()">
+			<div class="play-pause-button" id="play-pause-button-control"></div>
+		</div>
+	</div>
+	<script>
+		const pannel = document.getElementById('game-pannel')
+		const level_display = document.getElementById('current-level-display')
+
+		let game = null
+		let currentLevel = -1
+		let points = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+		let seed = Date.now() % 9999
+
+		if(window.location.hash) {
+			seed = parseInt(window.location.hash.slice(1), 24)
+		}
+
+		let level_seed = seed
+
+		function playStop() {
+			if (game == null) return
+
+			const display = document.getElementById('play-pause-button-control')
+
+			if (game.audioPlayer !== null) {
+				display.setAttribute('paused', false)
+				game.audioPlayer()
+				game.audioPlayer = null
+			} else {
+				display.setAttribute('paused', true)
+
+				game.audioPlayer = playSound(noteSets[0], game.data, _ => {
+					display.setAttribute('paused', false)
+					game.audioPlayer = null
+				})
+			}
+		}
+		
+		function playSound(noteSet, notes, endCallback, timeSpan = 0.5) {
+			const audioCtx = new AudioContext()
+			let length = notes.length * 0.5
+
+			let o = audioCtx.createOscillator()
+			o.type = "sine"
+
+			let g = audioCtx.createGain()
+			let g2 = audioCtx.createGain()
+			o
+				.connect(g)
+				.connect(g2)
+				.connect(audioCtx.destination)
+
+			g2.gain.value = 0.5
+
+			g.gain.value = 1.0
+			g.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + length)
+
+			o.start()
+
+			let time = 0
+			for (let note of notes) {
+				o.frequency.setValueAtTime(noteSet[note], time)
+				g.gain.setValueAtTime(0, time)
+				g.gain.linearRampToValueAtTime(1, time + 0.04)
+				g.gain.linearRampToValueAtTime(0.6, time + 0.08)
+				g.gain.linearRampToValueAtTime(0.6, time + 0.40)
+				g.gain.linearRampToValueAtTime(0, time + 0.5)
+				time += timeSpan
+			}
+
+			setTimeout(_ => { o.stop(); endCallback(); }, length * 1000)
+
+			return () => { o.stop() }
+		}
+
+		function noteElements(time, game) {
+			const d = document.createElement('div')
+			d.id = 'game-note'
+			d.setAttribute('time', time)
+
+			const pitchs = []
+
+			;[2, 1, 0].forEach(n => {
+				let p = document.createElement('div')
+				p.id = 'game-pitch'
+				p.setAttribute('pitch', n)
+				p.setAttribute('state', 'inactive')
+				p.addEventListener('click', () => {
+					game.state[time] = n
+
+					for (let div of pitchs) {
+						if (div.getAttribute('pitch') != n) {
+							div.setAttribute('state', 'inactive')
+						} else {
+							div.setAttribute('state', 'active')
+						}
+					}
+
+					checkGameState()
+				})
+				pitchs.push(p)
+				d.appendChild(p)
+			})
+			
+			return [d, pitchs]
+		}
+
+		function createGame(seed, length) {
+			const game = {
+				notes: null,
+				state: [],
+				audioPlayer: null,
+				seed: seed,
+				data: [],
+				_seed: seed,
+				nextRand() {
+					let n = xorshift(this._seed)
+					this._seed = n
+					return n
+				},
+				resetRand() {
+					this._seed = this.seed
+				}
+			}
+
+			let data = [0, 1, 2].concat(Array(length - 3).fill(0).map(() => {
+				return game.nextRand() % 3
+			}))
+			shuffleArray(data, () => (game.nextRand() % 1000)/1000 )
+
+			game.resetRand()
+			game.data = data
+
+			let notes = Array(length).fill(0).map((_,n) => noteElements(n, game))
+
+			notes.forEach(n => pannel.appendChild(n[0]))
+
+			game.notes = notes
+			game.state = Array(notes.length).fill(-1)
+
+			return game
+		}
+
+		function checkGameState() {
+			let terminated = game.state.map(n => n < 0 ? 1 : 0).reduce((a, b) => a + b) == 0
+			if (!terminated) return
+
+			let right = game.state.every((n, i) => n == game.data[i])
+
+			points[currentLevel] += 1
+
+			if (right) {
+				setTimeout(() => {
+					nextLevel()
+				}, 1000)
+			} else {
+				pannel.classList.add("wrong")
+
+				setTimeout(() => {
+					pannel.classList.remove("wrong")
+
+					for (const [note, pitchs] of game.notes) {
+						pitchs.forEach(p => p.setAttribute('state', 'inactive'))
+					}
+
+					game.state = game.state.map(_ => -1)
+				}, 1000)
+			}
+		}
+
+		function nextLevel() {
+			let range = document.createRange();
+			range.selectNodeContents(pannel);
+			range.deleteContents();
+
+			game = null
+
+			if (currentLevel >= 9) {
+				let total = points.reduce((a, b) => a + b)
+				pannel.innerHTML = `<h1>You finished with ${total} attempts!</h1>`
+				return
+			}
+			currentLevel += 1
+
+			level_display.innerText = `${currentLevel + 1}/10`
+			game = createGame(level_seed, [3, 3, 4, 4, 4, 5, 5, 5, 5, 5][currentLevel])
+
+			level_seed = xorshift(level_seed) % 9999
+		}
+
+		nextLevel()
+	</script>
+</body>
+</html>

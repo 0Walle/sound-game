@@ -1,0 +1,46 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Sound Game</title>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<script src="js/util.js"></script>
+	<style type="text/css">
+		body {
+			align-items: center;
+			justify-content: center;
+		}
+
+		h1, p, b {
+			color: white;
+			font-family: sans-serif;
+		}
+
+		h1 {
+			font-size: 48px;
+		}
+
+		button {
+			border: none;
+			background-color: #485558;
+			border-radius: 8px;
+			padding: 10px;
+			color: white;
+			font-family: sans-serif;
+			font-size: 16px;
+		}
+	</style>
+</head>
+<body>
+	<h1>Welcome to the sound game!</h1>
+	<b>How to Play</b>
+	<p>Hear the sound and click on the bars that represent the pitches of the sound</p>
+	<button onclick="les_go()">Play</button>
+	<script type="text/javascript">
+		function les_go() {
+			let seed = Math.floor(Math.random() * 9999)
+
+			window.location.href = `game.html#${seed.toString(24)}`
+		}
+	</script>
+</body>
+</html>
