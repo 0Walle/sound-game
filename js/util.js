@@ -14,7 +14,7 @@ const Note = {
 }
 
 const noteSets = [
-	[Note.A, Note.B, Note.G],
+	[Note.G, Note.A, Note.B],
 	[Note.D, Note.E, Note.F_],
 	[Note.F, Note.G, Note.A],
 	[Note.C, Note.D, Note.E],
